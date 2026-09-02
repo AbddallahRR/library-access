@@ -1,0 +1,575 @@
+// UI completa: componentes compartidos + kiosco + panel de administración.
+import { ScrollView, LineEdit, ListView } from "std-widgets.slint";
+// Componentes compartidos entre el kiosco y el panel.
+
+// Botón redondeado de colores estilo el original (kiosco).
+component BotonRedondeado {
+    in property <string> texto: "Entrar";
+    in property <color> color: #2196F3;
+    in property <bool> habilitado: false;
+    callback clicked;
+
+    private property <bool> hovered: area.has-hover;
+
+    min-width: 280px;
+    min-height: 44px;
+
+    Rectangle {
+        border-radius: 15px;
+        background: !root.habilitado ? #B0BEC5 : (hovered ? root.color.darker(0.25) : root.color);
+    }
+    Text {
+        text: root.texto;
+        color: root.habilitado ? #FFFFFF : #888888;
+        font-size: 14px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    area := TouchArea {
+        clicked => {
+            if (root.habilitado) {
+                root.clicked();
+            }
+        }
+    }
+}
+
+// Botón rectangular para el panel de administración.
+component Boton {
+    in property <string> texto;
+    in property <color> color: #274472;
+    in property <color> color_hover: #3A5A96;
+    in property <color> texto_color: #FFFFFF;
+    callback clicked;
+
+    private property <bool> hovered: area.has-hover;
+
+    min-height: 38px;
+
+    Rectangle {
+        border-radius: 8px;
+        background: hovered ? root.color_hover : root.color;
+        Text {
+            text: root.texto;
+            color: root.texto_color;
+            font-size: 14px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+    area := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// Popup de mensaje reutilizable (acepta/error/info).
+component MessagePopup {
+    in property <bool> show: false;
+    in property <string> titulo: "Mensaje";
+    in property <string> texto: "";
+    in property <color> fondo: #FFFFFF;
+    in property <color> texto_color: #000000;
+    callback aceptar;
+
+    width: 380px;
+
+    Rectangle {
+        visible: root.show;
+        border-radius: 12px;
+        background: root.fondo;
+        border-width: 2px;
+        border-color: #112B4A;
+        VerticalLayout {
+            padding: 24px;
+            spacing: 14px;
+            Text {
+                text: root.titulo;
+                color: root.texto_color;
+                font-size: 16px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: root.texto;
+                color: root.texto_color;
+                wrap: word-wrap;
+            }
+            HorizontalLayout {
+                alignment: center;
+                Boton {
+                    texto: "Aceptar";
+                    clicked => { root.aceptar(); }
+                }
+            }
+        }
+    }
+}
+
+// Tabla genérica de 4 columnas fijas.
+export struct Fila {
+    c0: string,
+    c1: string,
+    c2: string,
+    c3: string,
+}
+
+component Tabla4 {
+    in property <[Fila]> filas: [];
+    in property <[string]> cabeceras: ["Sala", "Carrera", "Masculino", "Femenino"];
+    in property <color> fondo: #16273B;
+    in property <color> fondo_alt: #1B2E45;
+    in property <color> fondo_cab: #274472;
+    in property <color> color_cab: #FFFFFF;
+    in property <color> texto_color: #E0E1DD;
+
+    ScrollView {
+        width: 100%;
+        height: 100%;
+        VerticalLayout {
+            spacing: 0px;
+            alignment: start;
+            Rectangle {
+                min-height: 32px;
+                background: root.fondo_cab;
+                HorizontalLayout {
+                    Text { text: root.cabeceras[0]; width: 180px; color: root.color_cab; font-weight: 700; font-size: 14px; }
+                    Text { text: root.cabeceras[1]; width: 380px; color: root.color_cab; font-weight: 700; font-size: 14px; }
+                    Text { text: root.cabeceras[2]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 14px; }
+                    Text { text: root.cabeceras[3]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 14px; }
+                }
+            }
+            for fila[i] in root.filas: Rectangle {
+                height: 30px;
+                background: Math.mod(i, 2) == 0 ? root.fondo : root.fondo_alt;
+                HorizontalLayout {
+                    Text { text: fila.c0; width: 180px; color: root.texto_color; overflow: elide; font-size: 14px; }
+                    Text { text: fila.c1; width: 380px; color: root.texto_color; overflow: elide; font-size: 14px; }
+                    Text { text: fila.c2; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 14px; }
+                    Text { text: fila.c3; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 14px; }
+                }
+            }
+        }
+    }
+}
+
+export component AccessUI inherits Window {
+    in property <bool> buttons_enabled: false;
+    in property <bool> entrada_visible: true;
+    in-out property <string> entrada;
+    in property <bool> labels_visibles: true;
+    in property <string> label_info: "Escribe tu matrícula o escanea QR:";
+    in property <string> qr_info: "";
+
+    entrada <=> entrada_field.text;
+
+    in property <bool> msg_visible: false;
+    in property <string> msg_titulo: "Mensaje";
+    in property <string> msg_texto: "";
+
+    callback entrada_cambiada(string);
+    callback solicitar_escaneo;
+    callback sala_general;
+    callback sala_estudio;
+    callback sala_computo;
+    callback cerrar_msg;
+
+    title: "Sistema de Acceso Estudiantil";
+    width: 440px;
+    height: 580px;
+    background: #FFFFFF;
+
+    forward-focus: entrada_field;
+
+    changed entrada_visible => {
+        if (entrada_visible) {
+            entrada_field.focus();
+        }
+    }
+
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #FFFFFF;
+
+        VerticalLayout {
+            padding: 20px;
+            spacing: 14px;
+            alignment: center;
+
+            Image {
+                source: @image-url("../../imagenes/logo_tecnm.png");
+                width: 300px;
+                height: 90px;
+            }
+            Text {
+                text: root.label_info;
+                visible: root.labels_visibles;
+                font-size: 14px;
+                font-weight: 700;
+                color: #000000;
+                horizontal-alignment: center;
+            }
+            Rectangle {
+                height: 44px;
+                border-radius: 8px;
+                visible: root.entrada_visible;
+                background: #FFFFFF;
+                border-color: #112B4A;
+                border-width: 2px;
+                Text {
+                    text: "Matrícula";
+                    visible: entrada_field.text == "";
+                    color: #888888;
+                    font-size: 14px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    x: 0;
+                    y: 0;
+                    width: parent.width;
+                    height: parent.height;
+                }
+                entrada_field := TextInput {
+                    x: 8px;
+                    y: 4px;
+                    width: parent.width - 16px;
+                    height: parent.height - 8px;
+                    font-size: 14px;
+                    color: #000000;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                    edited => { root.entrada_cambiada(root.entrada); }
+                    accepted => { root.solicitar_escaneo(); }
+                }
+            }
+            Text {
+                text: root.qr_info;
+                visible: root.labels_visibles;
+                color: #4CAF50;
+                font-size: 13px;
+                horizontal-alignment: center;
+            }
+            BotonRedondeado {
+                texto: "Entrar a General";
+                color: #2196F3;
+                habilitado: root.buttons_enabled && !root.msg_visible;
+                clicked => { root.sala_general(); }
+            }
+            BotonRedondeado {
+                texto: "Entrar a Estudio";
+                color: #FF9800;
+                habilitado: root.buttons_enabled && !root.msg_visible;
+                clicked => { root.sala_estudio(); }
+            }
+            BotonRedondeado {
+                texto: "Entrar a Computo";
+                color: #9C27B0;
+                habilitado: root.buttons_enabled && !root.msg_visible;
+                clicked => { root.sala_computo(); }
+            }
+        }
+
+        Rectangle {
+            visible: root.msg_visible;
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: #00000000;
+            TouchArea { }
+            MessagePopup {
+                x: (parent.width - 380px) / 2;
+                y: (parent.height - 240px) / 2;
+                show: root.msg_visible;
+                titulo: root.msg_titulo;
+                texto: root.msg_texto;
+                aceptar => { root.cerrar_msg(); }
+            }
+        }
+    }
+}
+
+export component AdminUI inherits Window {
+    // Tabla de reporte
+    in property <[Fila]> filas_reporte: [];
+    in property <bool> hay_reporte: false;
+    in property <[string]> cabeceras_reporte: ["Sala", "Carrera", "Masculino", "Femenino"];
+
+    // Mensaje
+    in property <bool> msg_visible: false;
+    in property <string> msg_titulo: "Mensaje";
+    in property <string> msg_texto: "";
+
+    // Resultado de importación de estudiantes
+    in property <bool> imp_visible: false;
+    in property <string> imp_totales: "";
+    in property <[Fila]> imp_primeros: [];
+    in property <[Fila]> imp_ultimos: [];
+
+    // Lista de reportes disponibles
+    in property <bool> rep_visible: false;
+    in property <[string]> rep_items: [];
+
+    // Diálogo año/trimestre
+    in property <bool> dlg_visible: false;
+    in-out property <string> dlg_año;
+    in-out property <string> dlg_trimestre;
+    dlg_año <=> field_año.text;
+    dlg_trimestre <=> field_trimestre.text;
+
+    callback cargar_reporte;
+    callback confirmar_carga;
+    callback cancelar_carga;
+    callback reportes_disponibles;
+    callback cargar_periodo(string);
+    callback cerrar_reportes;
+    callback importar_estudiantes;
+    callback cerrar_import;
+    callback importar_reportes_viejos;
+    callback cerrar_msg;
+
+    title: "Panel del Administrador";
+    width: 1200px;
+    height: 800px;
+    background: #0D1B2A;
+
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #0D1B2A;
+
+        VerticalLayout {
+            padding: 20px;
+            spacing: 14px;
+
+            Text {
+                text: "Panel de Administración de Biblioteca";
+                color: #F0F0F0;
+                font-size: 24px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+            Rectangle {
+                background: #112B4A;
+                border-radius: 8px;
+                horizontal-stretch: 1;
+                vertical-stretch: 1;
+                VerticalLayout {
+                    width: 100%;
+                    height: 100%;
+                    if root.hay_reporte: Tabla4 {
+                        filas: root.filas_reporte;
+                        cabeceras: root.cabeceras_reporte;
+                    }
+                    if !root.hay_reporte: Text {
+                        text: "Cargue un reporte o importe datos para visualizarlos";
+                        color: #B0BEC5;
+                        font-size: 15px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        vertical-stretch: 1;
+                    }
+                }
+            }
+            HorizontalLayout {
+                alignment: center;
+                spacing: 12px;
+                Boton {
+                    texto: "Cargar Reporte";
+                    clicked => { root.cargar_reporte(); }
+                }
+                Boton {
+                    texto: "Reportes Disponibles";
+                    clicked => { root.reportes_disponibles(); }
+                }
+                Boton {
+                    texto: "Importar Estudiantes (xlsx)";
+                    clicked => { root.importar_estudiantes(); }
+                }
+                Boton {
+                    texto: "Importar Reportes Antiguos (xlsx)";
+                    clicked => { root.importar_reportes_viejos(); }
+                }
+            }
+        }
+
+        // --- Popups ---
+
+        Rectangle {
+            visible: root.dlg_visible;
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: #00000000;
+            Rectangle {
+                x: (parent.width - 360px) / 2;
+                y: (parent.height - 280px) / 2;
+                width: 360px;
+                height: 280px;
+                border-radius: 12px;
+                background: #112B4A;
+                border-width: 2px;
+                border-color: #274472;
+                VerticalLayout {
+                    padding: 24px;
+                    spacing: 12px;
+                    Text {
+                        text: "Cargar reporte por año y trimestre";
+                        color: #F0F0F0;
+                        font-size: 16px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+                    Text { text: "Año (ej. 2025)"; color: #B0BEC5; }
+                    field_año := LineEdit { placeholder-text: "2025"; }
+                    Text { text: "Trimestre (1-4)"; color: #B0BEC5; }
+                    field_trimestre := LineEdit { placeholder-text: "1"; }
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: 12px;
+                        Boton {
+                            texto: "Aceptar";
+                            clicked => { root.confirmar_carga(); }
+                        }
+                        Boton {
+                            texto: "Cancelar";
+                            color: #415A77;
+                            color_hover: #536B8C;
+                            clicked => { root.cancelar_carga(); }
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            visible: root.rep_visible;
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: #00000000;
+            Rectangle {
+                x: (parent.width - 420px) / 2;
+                y: (parent.height - 480px) / 2;
+                width: 420px;
+                height: 480px;
+                border-radius: 12px;
+                background: #112B4A;
+                border-width: 2px;
+                border-color: #274472;
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 12px;
+                    Text {
+                        text: "Reportes Disponibles";
+                        color: #F0F0F0;
+                        font-size: 16px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+                    ListView {
+                        horizontal-stretch: 1;
+                        vertical-stretch: 1;
+                        for item in root.rep_items: Boton {
+                            texto: item;
+                            color: #E0E1DD;
+                            color_hover: #C8CFD8;
+                            texto_color: #0D1B2A;
+                            clicked => { root.cargar_periodo(item); }
+                        }
+                    }
+                    Boton {
+                        texto: "Cerrar";
+                        color: #415A77;
+                        color_hover: #536B8C;
+                        clicked => { root.cerrar_reportes(); }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            visible: root.imp_visible;
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: #00000000;
+            Rectangle {
+                x: (parent.width - 880px) / 2;
+                y: (parent.height - 640px) / 2;
+                width: 880px;
+                height: 640px;
+                border-radius: 12px;
+                background: #112B4A;
+                border-width: 2px;
+                border-color: #274472;
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 12px;
+                    Text {
+                        text: "Resultado de Importación";
+                        color: #F0F0F0;
+                        font-size: 16px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: root.imp_totales;
+                        color: #FFFFFF;
+                        font-size: 14px;
+                        wrap: word-wrap;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: "Primeros 5 registros del documento:";
+                        color: #B0BEC5;
+                        font-size: 14px;
+                        font-weight: 700;
+                    }
+                    Tabla4 {
+                        filas: root.imp_primeros;
+                        cabeceras: ["Matrícula", "Género", "Carrera", "Estado"];
+                    }
+                    Text {
+                        text: "Últimos 5 registros del documento:";
+                        color: #B0BEC5;
+                        font-size: 14px;
+                        font-weight: 700;
+                    }
+                    Tabla4 {
+                        filas: root.imp_ultimos;
+                        cabeceras: ["Matrícula", "Género", "Carrera", "Estado"];
+                    }
+                    Boton {
+                        texto: "Cerrar";
+                        clicked => { root.cerrar_import(); }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            visible: root.msg_visible;
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: #00000000;
+            TouchArea { }
+            MessagePopup {
+                x: (parent.width - 380px) / 2;
+                y: (parent.height - 240px) / 2;
+                show: root.msg_visible;
+                titulo: root.msg_titulo;
+                texto: root.msg_texto;
+                fondo: #FFFFFF;
+                texto_color: #000000;
+                aceptar => { root.cerrar_msg(); }
+            }
+        }
+    }
+}

@@ -1,0 +1,31 @@
+[package]
+name = "sistema-acceso"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "admin"
+path = "src/main.rs"
+
+[[bin]]
+name = "access"
+path = "src/bin/access.rs"
+
+[lib]
+name = "sistema_acceso"
+path = "src/lib.rs"
+
+[dependencies]
+slint = "1.17"
+rusqlite = { version = "0.40", features = ["bundled"] }
+calamine = "0.36"
+rfd = "0.17"
+directories = "6"
+chrono = "0.4"
+
+[build-dependencies]
+slint-build = "1.17"
+
+[profile.release]
+strip = true
+lto = true
