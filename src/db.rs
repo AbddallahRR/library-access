@@ -31,7 +31,8 @@ pub fn abrir_db() -> Connection {
             carrera   TEXT NOT NULL,
             genero    TEXT NOT NULL,
             fecha     TEXT NOT NULL
-        );",
+        );
+        CREATE INDEX IF NOT EXISTS idx_accesos_fecha ON accesos(fecha);",
     )
     .expect("no se pudo crear el esquema");
     conn
@@ -88,7 +89,8 @@ pub fn insertar_estudiante(conn: &Connection, e: &Estudiante) -> Result<bool, ru
 }
 
 /// Acceso del kiosco: copia carrera/genero del estudiante, igual que el original.
-pub fn insertar_acceso(conn: &Connection, matricula: &str, sala: &str) -> Result<(), String> {
+/// Devuelve los datos del estudiante para mostrarlos sin reconsultarlos.
+pub fn insertar_acceso(conn: &Connection, matricula: &str, sala: &str) -> Result<Estudiante, String> {
     if matricula.len() != 8 {
         return Err("Matrícula debe tener 8 dígitos".into());
     }
@@ -99,7 +101,7 @@ pub fn insertar_acceso(conn: &Connection, matricula: &str, sala: &str) -> Result
         rusqlite::params![matricula, sala, e.carrera, e.genero, fecha],
     )
     .map_err(|e| e.to_string())?;
-    Ok(())
+    Ok(e)
 }
 
 /// Acceso importado del formato antiguo: sin matrícula, con fecha sintética.
@@ -205,13 +207,26 @@ pub fn resumen_trimestre(conn: &Connection, año: i32, trimestre: u32) -> Vec<Re
 }
 
 pub fn periodos_disponibles(conn: &Connection) -> Vec<(i32, u32)> {
-    let mut stmt = conn.prepare("SELECT fecha FROM accesos").expect("consulta periodos");
-    let fechas: Vec<String> = stmt
+    let mut stmt = conn
+        .prepare("SELECT DISTINCT substr(fecha, 1, 7) FROM accesos")
+        .expect("consulta periodos");
+    let meses: Vec<String> = stmt
         .query_map([], |r| r.get::<_, String>(0))
         .expect("leer fechas")
         .collect::<Result<_, _>>()
         .unwrap_or_default();
-    let mut periodos: Vec<(i32, u32)> = fechas.iter().map(|f| trimestre_de(f)).collect();
+    let mut periodos: Vec<(i32, u32)> = Vec::new();
+    for m in &meses {
+        // "YYYY-MM" -> trimestre
+        if let (Some(y), Some(me)) = (
+            m.get(0..4).and_then(|s| s.parse::<i32>().ok()),
+            m.get(5..7).and_then(|s| s.parse::<u32>().ok()),
+        ) {
+            if (1..=12).contains(&me) {
+                periodos.push((y, (me - 1) / 3 + 1));
+            }
+        }
+    }
     periodos.sort_unstable();
     periodos.dedup();
     periodos

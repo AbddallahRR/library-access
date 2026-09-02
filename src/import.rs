@@ -83,6 +83,7 @@ pub fn importar_estudiantes(
     conn: &rusqlite::Connection,
     filas: Vec<FilaEstudiante>,
 ) -> (usize, usize, Vec<FilaEstudiante>) {
+    let tx = conn.unchecked_transaction().expect("iniciar transacción");
     let mut exitos = 0;
     let mut errores = 0;
     let mut resultado = Vec::with_capacity(filas.len());
@@ -97,7 +98,7 @@ pub fn importar_estudiantes(
             genero: f.genero.clone(),
             carrera: f.carrera.clone(),
         };
-        match db::insertar_estudiante(conn, &e) {
+        match db::insertar_estudiante(&tx, &e) {
             Ok(true) => {
                 exitos += 1;
                 f.estado = "Éxito: agregado".to_string();
@@ -113,6 +114,7 @@ pub fn importar_estudiantes(
         }
         resultado.push(f);
     }
+    tx.commit().expect("confirmar transacción");
     (exitos, errores, resultado)
 }
 

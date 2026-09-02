@@ -162,11 +162,12 @@ pub fn run_admin() {
                 let Some(archivos) = archivos else { return };
                 let mut total = 0usize;
                 let mut errores = 0usize;
+                let tx = conn.unchecked_transaction().expect("iniciar transacción");
                 for archivo in &archivos {
                     match import::leer_reporte_xlsx(archivo) {
                         Ok((_, _, accesos)) => {
                             for acc in &accesos {
-                                if db::insertar_acceso_legacy(&conn, &acc.sala, &acc.carrera, &acc.genero, &acc.fecha).is_ok() {
+                                if db::insertar_acceso_legacy(&tx, &acc.sala, &acc.carrera, &acc.genero, &acc.fecha).is_ok() {
                                     total += 1;
                                 } else {
                                     errores += 1;
@@ -179,6 +180,7 @@ pub fn run_admin() {
                         }
                     }
                 }
+                tx.commit().expect("confirmar transacción");
                 mostrar_msg(&ui, "Importación completa", &format!("Accesos importados: {total}\nErrores: {errores}"));
             }
         }
@@ -275,14 +277,11 @@ fn registrar(ui: &AccessUI, conn: &rusqlite::Connection, mat: &EstadoMatricula, 
         return;
     };
     match db::insertar_acceso(conn, &m, sala) {
-        Ok(()) => {
-            let texto = match db::estudiante(conn, &m) {
-                Some(e) => format!(
-                    "Acceso registrado exitosamente:\n\nMatrícula: {}\nCarrera: {}\nGénero: {}\nSala: {}",
-                    e.matricula, e.carrera, e.genero, sala
-                ),
-                None => format!("Acceso registrado exitosamente:\nSala: {sala}"),
-            };
+        Ok(e) => {
+            let texto = format!(
+                "Acceso registrado exitosamente:\n\nMatrícula: {}\nCarrera: {}\nGénero: {}\nSala: {}",
+                e.matricula, e.carrera, e.genero, sala
+            );
             mostrar_msg_k(ui, "Éxito", &texto);
         }
         Err(e) => mostrar_msg_k(ui, "Error", &e),

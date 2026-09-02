@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS accesos (
     genero    TEXT NOT NULL,      -- Copiado del estudiante al momento del acceso
     fecha     TEXT NOT NULL       -- Formato: "YYYY-MM-DD HH:MM:SS"
 );
+CREATE INDEX IF NOT EXISTS idx_accesos_fecha ON accesos(fecha);
 ```
 
 | Columna | Tipo | Constraints | Descripción |
@@ -76,10 +77,10 @@ SELECT 1 FROM estudiantes WHERE matricula = ?1;
 ### Periodos disponibles
 
 ```sql
-SELECT DISTINCT fecha FROM accesos;
+SELECT DISTINCT substr(fecha, 1, 7) FROM accesos;
 ```
 
-Se procesa en Rust para extraer `(año, trimestre)` únicos.
+Se procesa en Rust para extraer `(año, trimestre)` únicos (agrupa por año-mes, evitando leer todas las filas). El índice `idx_accesos_fecha` acelera este escaneo y el filtro por rango de fechas del resumen trimestral.
 
 ## Convenciones de fechas
 
