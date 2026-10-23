@@ -12,17 +12,22 @@ component BotonRedondeado {
     private property <bool> hovered: area.has-hover;
 
     min-width: 280px;
-    min-height: 44px;
+    min-height: 48px;
 
     Rectangle {
-        border-radius: 15px;
+        border-radius: 14px;
         background: !root.habilitado ? #B0BEC5 : (hovered ? root.color.darker(0.25) : root.color);
+        animate background { duration: 200ms; }
+        drop-shadow-blur: 8px;
+        drop-shadow-color: !root.habilitado ? transparent : root.color.with-alpha(0.35);
+        drop-shadow-offset-y: 3px;
     }
     Text {
         text: root.texto;
         color: root.habilitado ? #FFFFFF : #888888;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 700;
+        letter-spacing: 0.5px;
         horizontal-alignment: center;
         vertical-alignment: center;
     }
@@ -45,11 +50,15 @@ component Boton {
 
     private property <bool> hovered: area.has-hover;
 
-    min-height: 38px;
+    min-height: 40px;
 
     Rectangle {
-        border-radius: 8px;
+        border-radius: 10px;
         background: hovered ? root.color_hover : root.color;
+        animate background { duration: 200ms; }
+        drop-shadow-blur: 4px;
+        drop-shadow-color: #00000025;
+        drop-shadow-offset-y: 2px;
         Text {
             text: root.texto;
             color: root.texto_color;
@@ -73,21 +82,22 @@ component MessagePopup {
     in property <color> texto_color: #000000;
     callback aceptar;
 
-    width: 380px;
+    width: 400px;
 
     Rectangle {
         visible: root.show;
-        border-radius: 12px;
+        border-radius: 16px;
         background: root.fondo;
-        border-width: 2px;
-        border-color: #112B4A;
+        drop-shadow-blur: 32px;
+        drop-shadow-color: #00000050;
+        drop-shadow-offset-y: 10px;
         VerticalLayout {
-            padding: 24px;
-            spacing: 14px;
+            padding: 28px;
+            spacing: 16px;
             Text {
                 text: root.titulo;
                 color: root.texto_color;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: 700;
                 horizontal-alignment: center;
             }
@@ -95,6 +105,7 @@ component MessagePopup {
                 text: root.texto;
                 color: root.texto_color;
                 wrap: word-wrap;
+                horizontal-alignment: center;
             }
             HorizontalLayout {
                 alignment: center;
@@ -124,30 +135,37 @@ component Tabla4 {
     in property <color> color_cab: #FFFFFF;
     in property <color> texto_color: #E0E1DD;
 
-    ScrollView {
-        width: 100%;
-        height: 100%;
-        VerticalLayout {
-            spacing: 0px;
-            alignment: start;
-            Rectangle {
-                min-height: 32px;
-                background: root.fondo_cab;
-                HorizontalLayout {
-                    Text { text: root.cabeceras[0]; width: 180px; color: root.color_cab; font-weight: 700; font-size: 14px; }
-                    Text { text: root.cabeceras[1]; width: 380px; color: root.color_cab; font-weight: 700; font-size: 14px; }
-                    Text { text: root.cabeceras[2]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 14px; }
-                    Text { text: root.cabeceras[3]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 14px; }
+    Rectangle {
+        border-radius: 10px;
+        background: root.fondo;
+        clip: true;
+        ScrollView {
+            width: 100%;
+            height: 100%;
+            VerticalLayout {
+                spacing: 0px;
+                alignment: start;
+                Rectangle {
+                    min-height: 36px;
+                    background: @linear-gradient(180deg, #1E3A5F, #274472);
+                    HorizontalLayout {
+                        Text { text: root.cabeceras[0]; width: 180px; color: root.color_cab; font-weight: 700; font-size: 13px; }
+                        Text { text: root.cabeceras[1]; width: 380px; color: root.color_cab; font-weight: 700; font-size: 13px; }
+                        Text { text: root.cabeceras[2]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 13px; }
+                        Text { text: root.cabeceras[3]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 13px; }
+                    }
                 }
-            }
-            for fila[i] in root.filas: Rectangle {
-                height: 30px;
-                background: Math.mod(i, 2) == 0 ? root.fondo : root.fondo_alt;
-                HorizontalLayout {
-                    Text { text: fila.c0; width: 180px; color: root.texto_color; overflow: elide; font-size: 14px; }
-                    Text { text: fila.c1; width: 380px; color: root.texto_color; overflow: elide; font-size: 14px; }
-                    Text { text: fila.c2; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 14px; }
-                    Text { text: fila.c3; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 14px; }
+                for fila[i] in root.filas: Rectangle {
+                    height: 32px;
+                    background: area.has-hover ? #2A4060 : (Math.mod(i, 2) == 0 ? root.fondo : root.fondo_alt);
+                    animate background { duration: 150ms; }
+                    HorizontalLayout {
+                        Text { text: fila.c0; width: 180px; color: root.texto_color; overflow: elide; font-size: 13px; }
+                        Text { text: fila.c1; width: 380px; color: root.texto_color; overflow: elide; font-size: 13px; }
+                        Text { text: fila.c2; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 13px; }
+                        Text { text: fila.c3; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 13px; }
+                    }
+                    area := TouchArea { }
                 }
             }
         }
@@ -177,8 +195,8 @@ export component AccessUI inherits Window {
 
     title: "Sistema de Acceso Estudiantil";
     width: 440px;
-    height: 580px;
-    background: #FFFFFF;
+    height: 620px;
+    background: transparent;
 
     forward-focus: entrada_field;
 
@@ -191,11 +209,11 @@ export component AccessUI inherits Window {
     Rectangle {
         width: 100%;
         height: 100%;
-        background: #FFFFFF;
+        background: @linear-gradient(180deg, #F0F4FF, #FFFFFF);
 
         VerticalLayout {
-            padding: 20px;
-            spacing: 14px;
+            padding: 28px;
+            spacing: 18px;
             alignment: center;
 
             Image {
@@ -206,23 +224,26 @@ export component AccessUI inherits Window {
             Text {
                 text: root.label_info;
                 visible: root.labels_visibles;
-                font-size: 14px;
-                font-weight: 700;
-                color: #000000;
+                font-size: 15px;
+                font-weight: 600;
+                color: #37474F;
                 horizontal-alignment: center;
             }
             Rectangle {
-                height: 44px;
-                border-radius: 8px;
+                height: 48px;
+                border-radius: 12px;
                 visible: root.entrada_visible;
                 background: #FFFFFF;
-                border-color: #112B4A;
+                border-color: #B0BEC5;
                 border-width: 2px;
+                drop-shadow-blur: 6px;
+                drop-shadow-color: #00000018;
+                drop-shadow-offset-y: 2px;
                 Text {
                     text: "Matrícula";
                     visible: entrada_field.text == "";
-                    color: #888888;
-                    font-size: 14px;
+                    color: #90A4AE;
+                    font-size: 15px;
                     horizontal-alignment: center;
                     vertical-alignment: center;
                     x: 0;
@@ -231,12 +252,12 @@ export component AccessUI inherits Window {
                     height: parent.height;
                 }
                 entrada_field := TextInput {
-                    x: 8px;
-                    y: 4px;
-                    width: parent.width - 16px;
-                    height: parent.height - 8px;
-                    font-size: 14px;
-                    color: #000000;
+                    x: 12px;
+                    y: 6px;
+                    width: parent.width - 24px;
+                    height: parent.height - 12px;
+                    font-size: 16px;
+                    color: #1A237E;
                     vertical-alignment: center;
                     horizontal-alignment: center;
                     edited => { root.entrada_cambiada(root.entrada); }
@@ -246,25 +267,26 @@ export component AccessUI inherits Window {
             Text {
                 text: root.qr_info;
                 visible: root.labels_visibles;
-                color: #4CAF50;
-                font-size: 13px;
+                color: #2E7D32;
+                font-size: 14px;
+                font-weight: 600;
                 horizontal-alignment: center;
             }
             BotonRedondeado {
                 texto: "Entrar a General";
-                color: #2196F3;
+                color: #1565C0;
                 habilitado: root.buttons_enabled && !root.msg_visible;
                 clicked => { root.sala_general(); }
             }
             BotonRedondeado {
                 texto: "Entrar a Estudio";
-                color: #FF9800;
+                color: #E65100;
                 habilitado: root.buttons_enabled && !root.msg_visible;
                 clicked => { root.sala_estudio(); }
             }
             BotonRedondeado {
                 texto: "Entrar a Computo";
-                color: #9C27B0;
+                color: #6A1B9A;
                 habilitado: root.buttons_enabled && !root.msg_visible;
                 clicked => { root.sala_computo(); }
             }
@@ -279,8 +301,8 @@ export component AccessUI inherits Window {
             background: #00000000;
             TouchArea { }
             MessagePopup {
-                x: (parent.width - 380px) / 2;
-                y: (parent.height - 240px) / 2;
+                x: (parent.width - 400px) / 2;
+                y: 120px;
                 show: root.msg_visible;
                 titulo: root.msg_titulo;
                 texto: root.msg_texto;
@@ -340,19 +362,22 @@ export component AdminUI inherits Window {
         background: #0D1B2A;
 
         VerticalLayout {
-            padding: 20px;
-            spacing: 14px;
+            padding: 24px;
+            spacing: 16px;
 
             Text {
-                text: "Panel de Administración de Biblioteca";
+                text: "📚 Panel de Administración de Biblioteca";
                 color: #F0F0F0;
-                font-size: 24px;
+                font-size: 26px;
                 font-weight: 700;
                 horizontal-alignment: center;
             }
             Rectangle {
                 background: #112B4A;
-                border-radius: 8px;
+                border-radius: 12px;
+                drop-shadow-blur: 10px;
+                drop-shadow-color: #00000030;
+                drop-shadow-offset-y: 4px;
                 horizontal-stretch: 1;
                 vertical-stretch: 1;
                 VerticalLayout {
@@ -363,9 +388,9 @@ export component AdminUI inherits Window {
                         cabeceras: root.cabeceras_reporte;
                     }
                     if !root.hay_reporte: Text {
-                        text: "Cargue un reporte o importe datos para visualizarlos";
-                        color: #B0BEC5;
-                        font-size: 15px;
+                        text: "📋 Cargue un reporte o importe datos para visualizarlos";
+                        color: #78909C;
+                        font-size: 16px;
                         horizontal-alignment: center;
                         vertical-alignment: center;
                         vertical-stretch: 1;
@@ -374,21 +399,21 @@ export component AdminUI inherits Window {
             }
             HorizontalLayout {
                 alignment: center;
-                spacing: 12px;
+                spacing: 14px;
                 Boton {
-                    texto: "Cargar Reporte";
+                    texto: "📁 Cargar Reporte";
                     clicked => { root.cargar_reporte(); }
                 }
                 Boton {
-                    texto: "Reportes Disponibles";
+                    texto: "📋 Reportes Disponibles";
                     clicked => { root.reportes_disponibles(); }
                 }
                 Boton {
-                    texto: "Importar Estudiantes (xlsx)";
+                    texto: "📥 Importar Estudiantes (xlsx)";
                     clicked => { root.importar_estudiantes(); }
                 }
                 Boton {
-                    texto: "Importar Reportes Antiguos (xlsx)";
+                    texto: "📦 Importar Reportes Antiguos (xlsx)";
                     clicked => { root.importar_reportes_viejos(); }
                 }
             }
@@ -404,31 +429,32 @@ export component AdminUI inherits Window {
             height: parent.height;
             background: #00000000;
             Rectangle {
-                x: (parent.width - 360px) / 2;
-                y: (parent.height - 280px) / 2;
-                width: 360px;
-                height: 280px;
-                border-radius: 12px;
+                x: (parent.width - 380px) / 2;
+                y: (parent.height - 300px) / 2;
+                width: 380px;
+                height: 300px;
+                border-radius: 16px;
                 background: #112B4A;
-                border-width: 2px;
-                border-color: #274472;
+                drop-shadow-blur: 24px;
+                drop-shadow-color: #00000060;
+                drop-shadow-offset-y: 10px;
                 VerticalLayout {
-                    padding: 24px;
-                    spacing: 12px;
+                    padding: 28px;
+                    spacing: 14px;
                     Text {
-                        text: "Cargar reporte por año y trimestre";
+                        text: "📅 Cargar reporte por año y trimestre";
                         color: #F0F0F0;
-                        font-size: 16px;
+                        font-size: 17px;
                         font-weight: 700;
                         horizontal-alignment: center;
                     }
-                    Text { text: "Año (ej. 2025)"; color: #B0BEC5; }
+                    Text { text: "Año (ej. 2025)"; color: #90A4AE; font-size: 13px; }
                     field_año := LineEdit { placeholder-text: "2025"; }
-                    Text { text: "Trimestre (1-4)"; color: #B0BEC5; }
+                    Text { text: "Trimestre (1-4)"; color: #90A4AE; font-size: 13px; }
                     field_trimestre := LineEdit { placeholder-text: "1"; }
                     HorizontalLayout {
                         alignment: center;
-                        spacing: 12px;
+                        spacing: 14px;
                         Boton {
                             texto: "Aceptar";
                             clicked => { root.confirmar_carga(); }
@@ -452,19 +478,20 @@ export component AdminUI inherits Window {
             height: parent.height;
             background: #00000000;
             Rectangle {
-                x: (parent.width - 420px) / 2;
+                x: (parent.width - 440px) / 2;
                 y: (parent.height - 480px) / 2;
-                width: 420px;
+                width: 440px;
                 height: 480px;
-                border-radius: 12px;
+                border-radius: 16px;
                 background: #112B4A;
-                border-width: 2px;
-                border-color: #274472;
+                drop-shadow-blur: 24px;
+                drop-shadow-color: #00000060;
+                drop-shadow-offset-y: 10px;
                 VerticalLayout {
-                    padding: 20px;
-                    spacing: 12px;
+                    padding: 24px;
+                    spacing: 14px;
                     Text {
-                        text: "Reportes Disponibles";
+                        text: "🗂️ Reportes Disponibles";
                         color: #F0F0F0;
                         font-size: 16px;
                         font-weight: 700;
@@ -503,15 +530,16 @@ export component AdminUI inherits Window {
                 y: (parent.height - 640px) / 2;
                 width: 880px;
                 height: 640px;
-                border-radius: 12px;
+                border-radius: 16px;
                 background: #112B4A;
-                border-width: 2px;
-                border-color: #274472;
+                drop-shadow-blur: 24px;
+                drop-shadow-color: #00000060;
+                drop-shadow-offset-y: 10px;
                 VerticalLayout {
-                    padding: 20px;
-                    spacing: 12px;
+                    padding: 24px;
+                    spacing: 14px;
                     Text {
-                        text: "Resultado de Importación";
+                        text: "📊 Resultado de Importación";
                         color: #F0F0F0;
                         font-size: 16px;
                         font-weight: 700;
@@ -525,8 +553,8 @@ export component AdminUI inherits Window {
                         horizontal-alignment: center;
                     }
                     Text {
-                        text: "Primeros 5 registros del documento:";
-                        color: #B0BEC5;
+                        text: "Primeros 5 registros:";
+                        color: #90A4AE;
                         font-size: 14px;
                         font-weight: 700;
                     }
@@ -536,7 +564,7 @@ export component AdminUI inherits Window {
                     }
                     Text {
                         text: "Últimos 5 registros del documento:";
-                        color: #B0BEC5;
+                        color: #90A4AE;
                         font-size: 14px;
                         font-weight: 700;
                     }
@@ -561,7 +589,7 @@ export component AdminUI inherits Window {
             background: #00000000;
             TouchArea { }
             MessagePopup {
-                x: (parent.width - 380px) / 2;
+                x: (parent.width - 400px) / 2;
                 y: (parent.height - 240px) / 2;
                 show: root.msg_visible;
                 titulo: root.msg_titulo;
