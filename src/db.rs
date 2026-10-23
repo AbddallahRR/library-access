@@ -129,13 +129,13 @@ pub fn trimestre_de(fecha: &str) -> (i32, u32) {
 
 /// Último día del trimestre dado (fecha sintética para import de reportes viejos).
 pub fn fin_de_trimestre(año: i32, trimestre: u32) -> NaiveDate {
-    let fin_mes = match trimestre {
-        1 => 3,
-        2 => 6,
-        3 => 9,
-        _ => 12,
+    let (y, m) = match trimestre {
+        1 => (año, 4),
+        2 => (año, 7),
+        3 => (año, 10),
+        _ => (año + 1, 1), // Q4: año siguiente, enero 1 → pred = 31 dic
     };
-    NaiveDate::from_ymd_opt(año, fin_mes + 1, 1)
+    NaiveDate::from_ymd_opt(y, m, 1)
         .and_then(|d| d.pred_opt())
         .expect("trimestre inválido")
 }
