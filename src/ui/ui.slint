@@ -59,13 +59,17 @@ component Boton {
         drop-shadow-blur: 4px;
         drop-shadow-color: #00000025;
         drop-shadow-offset-y: 2px;
-        Text {
-            text: root.texto;
-            color: root.texto_color;
-            font-size: 14px;
-            font-weight: 700;
-            horizontal-alignment: center;
-            vertical-alignment: center;
+        HorizontalLayout {
+            padding-left: 18px;
+            padding-right: 18px;
+            Text {
+                text: root.texto;
+                color: root.texto_color;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
         }
     }
     area := TouchArea {
@@ -149,6 +153,8 @@ component Tabla4 {
                     min-height: 36px;
                     background: @linear-gradient(180deg, #1E3A5F, #274472);
                     HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
                         Text { text: root.cabeceras[0]; width: 180px; color: root.color_cab; font-weight: 700; font-size: 13px; }
                         Text { text: root.cabeceras[1]; width: 380px; color: root.color_cab; font-weight: 700; font-size: 13px; }
                         Text { text: root.cabeceras[2]; width: 180px; color: root.color_cab; horizontal-alignment: center; font-weight: 700; font-size: 13px; }
@@ -160,6 +166,8 @@ component Tabla4 {
                     background: area.has-hover ? #2A4060 : (Math.mod(i, 2) == 0 ? root.fondo : root.fondo_alt);
                     animate background { duration: 150ms; }
                     HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
                         Text { text: fila.c0; width: 180px; color: root.texto_color; overflow: elide; font-size: 13px; }
                         Text { text: fila.c1; width: 380px; color: root.texto_color; overflow: elide; font-size: 13px; }
                         Text { text: fila.c2; width: 180px; color: root.texto_color; horizontal-alignment: center; font-size: 13px; }
@@ -362,8 +370,8 @@ export component AdminUI inherits Window {
         background: #0D1B2A;
 
         VerticalLayout {
-            padding: 24px;
-            spacing: 16px;
+            padding: 32px;
+            spacing: 20px;
 
             Text {
                 text: "📚 Panel de Administración de Biblioteca";
@@ -400,6 +408,8 @@ export component AdminUI inherits Window {
             HorizontalLayout {
                 alignment: center;
                 spacing: 14px;
+                padding-left: 16px;
+                padding-right: 16px;
                 Boton {
                     texto: "📁 Cargar Reporte";
                     clicked => { root.cargar_reporte(); }
